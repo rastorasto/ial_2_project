@@ -66,7 +66,7 @@ ht_item_t *ht_search(ht_table_t *table, char *key) {
 void ht_insert(ht_table_t *table, char *key, float value) {
   int hash = get_hash(key);
   ht_item_t *item = ht_search(table, key); // Saves the item with the same key
-  if(item == NULL) { // If the item doesn't exists
+  if(item == NULL) { // If the item doesn't exist
     item = (ht_item_t *) malloc(sizeof(ht_item_t)); // Allocates the new item
     // Set the parameters of the new item
     item->key = (char *) malloc(strlen(key) + 1); // Allocate memory for the key
@@ -134,14 +134,14 @@ void ht_delete(ht_table_t *table, char *key) {
  * inicializaci.
  */
 void ht_delete_all(ht_table_t *table) {
-  for(int i = 0; i < MAX_HT_SIZE; i++) {
+  for(int i = 0; i < MAX_HT_SIZE; i++) { // Goes thrue all "buckets"
     ht_item_t *item = (*table)[i];
-    while(item != NULL) {
+    while(item != NULL) { // Goes thrue all items in the bucket
       ht_item_t *next = item->next;
       free(item->key);
       free(item);
       item = next;
     }
-    (*table)[i] = NULL;
+    (*table)[i] = NULL; // Sets the head of bucket to NULL
   }
 }
