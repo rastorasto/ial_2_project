@@ -44,7 +44,7 @@ void ht_init(ht_table_t *table) {
  * hodnotu NULL.
  */
 ht_item_t *ht_search(ht_table_t *table, char *key) {
-    char hashkey = get_hash(key);
+    int hashkey = get_hash(key);
     ht_item_t *item = (*table)[hashkey]; // Gets the first item with the same hash
     while (item != NULL) { // Goes thrue all items with the same hash
         if (strcmp(item->key, key) == 0) {
@@ -64,15 +64,20 @@ ht_item_t *ht_search(ht_table_t *table, char *key) {
  * synonym zvolte nejefektivnější možnost a vložte prvek na začátek seznamu.
  */
 void ht_insert(ht_table_t *table, char *key, float value) {
-  char hash = get_hash(key);
+  int hash = get_hash(key);
   ht_item_t *item = ht_search(table, key); // Saves the item with the same key
   if(item == NULL) { // If the item doesn't exists
     item = (ht_item_t *) malloc(sizeof(ht_item_t)); // Allocates the new item
     // Set the parameters of the new item
-    item->key = key;
+    item->key = (char *) malloc(strlen(key) + 1); // Allocate memory for the key
+    if(item->key == NULL) {
+      free(item);
+      return;
+    }
+    strcpy(item->key, key); // Copy the key string
     item->value = value;
-    item->next = NULL;
-    (*table)[hash] = item; // Saves the new item to the table
+    item->next = (*table)[hash]; // Insert the new item at the beginning of the list
+    (*table)[hash] = item; // Update the head of the list
   } else { // If the item exists just changes the value
     item->value = value;
   }
@@ -103,11 +108,23 @@ float *ht_get(ht_table_t *table, char *key) {
  * Při implementaci NEPOUŽÍVEJTE funkci ht_search.
  */
 void ht_delete(ht_table_t *table, char *key) {
-  // while(item != NULL) { // If the item exists it deletes it and all the synonyms  
-  //   ht_item_t *temp = item;
-  //   item = item->next;
-  //   free(temp);
-  // }
+  int hash = get_hash(key);
+ ht_item_t *item = (*table)[hash]; // Saves the first item with the same hash
+  ht_item_t *prev = NULL;
+  while (item != NULL) {
+    if (strcmp(item->key, key) == 0) { // If the key is the same
+      if (prev == NULL) {
+        (*table)[hash] = item->next; // Update head if first item is to be deleted
+      } else {
+        prev->next = item->next; // Update the previous item's next pointer
+      }
+      free(item->key);
+      free(item);
+      return;
+    }
+    prev = item;
+    item = item->next;
+  }
 }
 
 /*
@@ -117,10 +134,14 @@ void ht_delete(ht_table_t *table, char *key) {
  * inicializaci.
  */
 void ht_delete_all(ht_table_t *table) {
-  // for(int i=0; i<MAX_HT_SIZE; i++) {
-  //   ht_item_t *item = (*table)[i];
-  //   if (item != NULL) {
-  //     ht_delete(table, item->key);
-  //   }
-  // }
+  for(int i = 0; i < MAX_HT_SIZE; i++) {
+    ht_item_t *item = (*table)[i];
+    while(item != NULL) {
+      ht_item_t *next = item->next;
+      free(item->key);
+      free(item);
+      item = next;
+    }
+    (*table)[i] = NULL;
+  }
 }
