@@ -20,16 +20,6 @@
 void bst_init(bst_node_t **tree)
 {
   *tree = NULL;
-  // if(*tree != NULL) {
-  //   return;
-  // }
-  // *tree = (bst_node_t*)malloc(sizeof(bst_node_t)); // Allocates the momory for the tree
-  // if(*tree == NULL) {
-  //   exit(1);
-  // }
-  // // Sets the children to NULL
-  // (*tree)->left = NULL;
-  // (*tree)->right = NULL;
 }
 
 /*
@@ -71,16 +61,15 @@ bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
 void bst_insert(bst_node_t **tree, char key, bst_node_content_t value)
 {
   if(*tree == NULL) { // If the node doesn't exist
-    bst_node_t *new_node = (bst_node_t*)malloc(sizeof(bst_node_t));
-    if(new_node == NULL) {
+    *tree = (bst_node_t*)malloc(sizeof(bst_node_t));
+    if(*tree == NULL) {
       exit(1);
     }
     // Sets the values of the new node
-    new_node->key = key;
-    new_node->content = value;
-    new_node->left = NULL;
-    new_node->right = NULL;
-    *tree = new_node; // Sets the new node as the root of the tree
+    (*tree)->key = key;
+    (*tree)->content = value;
+    (*tree)->left = NULL;
+    (*tree)->right = NULL;
   } else if ((*tree)->key == key) { // If the node with the key already exists change the content
     (*tree)->content = value;
   } else if ((*tree)->key > key) { // Goes to left/right subtree depending on the key value
@@ -113,10 +102,9 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
     target->content = (*tree)->content;
     
     bst_node_t *temp = *tree;
-    *tree = (*tree)->left; // Sets the rightmost node as its left child NULL if it doesn't have one
+    *tree = (*tree)->left; // Sets the rightmost node as its left child
     free(temp); // Frees the memory of the rightmost node
   }
-
 }
 
 /*
@@ -134,25 +122,29 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
  */
 void bst_delete(bst_node_t **tree, char key)
 {
-  if (*tree == NULL) { // If the tree is empty do nothign
-    return;
+  if (*tree == NULL) {
+      return;  // If the tree is empty do nothing
   }
-  if ((*tree)->key == key) { // If the key is at the root of the tree
-    bst_node_t *temp = *tree;
-    if ((*tree)->left == NULL && (*tree)->right == NULL) { // If the node doesn't have any children
-      *tree = NULL;
-    } else if ((*tree)->left == NULL) {  // If the node has only right child replace it with the right child
-      *tree = (*tree)->right;
-    } else if ((*tree)->right == NULL) { // If the node has only left child replace it with the left child
-      *tree = (*tree)->left;
-    } else { //If the node has both children replace it with the rightmost of the left subtree
-      bst_replace_by_rightmost(*tree, &(*tree)->left);
-    }
-    free(temp); // Frees the memory of the node
-  } else if ((*tree)->key > key) { // If the key is smaller go to the left subtree
-    bst_delete(&(*tree)->left, key);
-  } else {
-    bst_delete(&(*tree)->right, key); // If the key is bigger go to the right subtree
+  if (key < (*tree)->key) { // Key is in the left subtree
+      bst_delete(&(*tree)->left, key);
+  } else if (key > (*tree)->key) { // Key is in the right subtree
+      bst_delete(&(*tree)->right, key);
+  } else if (key == (*tree)->key) { // Key is at the root of the tree
+      if ((*tree)->left == NULL && (*tree)->right == NULL) { // Node doesn't have children
+          free(*tree);
+          *tree = NULL;
+      } else if ((*tree)->left == NULL) { // Node has only a right chil
+          bst_node_t *temp = *tree;
+          *tree = (*tree)->right;
+          free(temp);
+      } else if ((*tree)->right == NULL) { // Node has only left child
+          bst_node_t *temp = *tree;
+          *tree = (*tree)->left;
+          free(temp);
+      } else {
+        // Node has two children
+        bst_replace_by_rightmost(*tree, &(*tree)->left);
+      }
   }
 }
 
@@ -167,6 +159,12 @@ void bst_delete(bst_node_t **tree, char key)
  */
 void bst_dispose(bst_node_t **tree)
 {
+  if(*tree != NULL){
+    bst_dispose(&(*tree)->left);
+    bst_dispose(&(*tree)->right);
+    free(*tree);
+    *tree = NULL;
+  }
 }
 
 /*
@@ -178,6 +176,20 @@ void bst_dispose(bst_node_t **tree)
  */
 void bst_preorder(bst_node_t *tree, bst_items_t *items)
 {
+  // if (tree != NULL) {
+  //   bst_add_node_to_items(items, tree); 
+  //   bst_preorder(tree->left, items);
+  //   bst_preorder(tree->right, items);
+  // }
+  if(tree != NULL){
+    bst_add_node_to_items(tree, items);
+    if(tree->left != NULL){
+      bst_preorder(tree->left, items);
+    }
+    if(tree->right != NULL){
+      bst_preorder(tree->right, items);
+    }
+  }
 }
 
 /*
@@ -189,6 +201,15 @@ void bst_preorder(bst_node_t *tree, bst_items_t *items)
  */
 void bst_inorder(bst_node_t *tree, bst_items_t *items)
 {
+  if(tree != NULL){
+    if(tree->left != NULL){
+      bst_inorder(tree->left, items);
+    }
+    bst_add_node_to_items(tree, items);
+    if(tree->right != NULL){
+      bst_inorder(tree->right, items);
+    }
+  }
 }
 
 /*
@@ -200,4 +221,13 @@ void bst_inorder(bst_node_t *tree, bst_items_t *items)
  */
 void bst_postorder(bst_node_t *tree, bst_items_t *items)
 {
+  if(tree != NULL){
+    if(tree->left != NULL){
+      bst_postorder(tree->left, items);
+    }
+    if(tree->right != NULL){
+      bst_postorder(tree->right, items);
+    }
+    bst_add_node_to_items(tree, items);
+  }
 }
