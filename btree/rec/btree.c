@@ -19,6 +19,17 @@
  */
 void bst_init(bst_node_t **tree)
 {
+  *tree = NULL;
+  // if(*tree != NULL) {
+  //   return;
+  // }
+  // *tree = (bst_node_t*)malloc(sizeof(bst_node_t)); // Allocates the momory for the tree
+  // if(*tree == NULL) {
+  //   exit(1);
+  // }
+  // // Sets the children to NULL
+  // (*tree)->left = NULL;
+  // (*tree)->right = NULL;
 }
 
 /*
@@ -32,7 +43,18 @@ void bst_init(bst_node_t **tree)
  */
 bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
 {
-  return false;
+  if(tree == NULL) { // If the tree is empty
+    return false;
+  }
+  if(tree->key == key) { // If the key is at the root of the tree (subtree)
+    *value = &tree->content;
+    return true;
+  }
+  if(tree->key > key) { // If the key is smaller the smaller keys are in the left subtree
+    return bst_search(tree->left, key, value);
+  } else { // tree->key < key The bigger keys are in the right subtree
+    return bst_search(tree->right, key, value);
+  }
 }
 
 /*
@@ -48,6 +70,24 @@ bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
  */
 void bst_insert(bst_node_t **tree, char key, bst_node_content_t value)
 {
+  if(*tree == NULL) { // If the node doesn't exist
+    bst_node_t *new_node = (bst_node_t*)malloc(sizeof(bst_node_t));
+    if(new_node == NULL) {
+      exit(1);
+    }
+    // Sets the values of the new node
+    new_node->key = key;
+    new_node->content = value;
+    new_node->left = NULL;
+    new_node->right = NULL;
+    *tree = new_node; // Sets the new node as the root of the tree
+  } else if ((*tree)->key == key) { // If the node with the key already exists change the content
+    (*tree)->content = value;
+  } else if ((*tree)->key > key) { // Goes to left/right subtree depending on the key value
+    bst_insert(&(*tree)->left, key, value);
+  } else {
+    bst_insert(&(*tree)->right, key, value);
+  }
 }
 
 /*
@@ -65,6 +105,18 @@ void bst_insert(bst_node_t **tree, char key, bst_node_content_t value)
  */
 void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
 {
+  if ((*tree)->right != NULL) {
+    bst_replace_by_rightmost(target, &(*tree)->right); // Goes to the rightmost node
+  } else {
+    // Sets the target values to the rightmost node values
+    target->key = (*tree)->key;
+    target->content = (*tree)->content;
+    
+    bst_node_t *temp = *tree;
+    *tree = (*tree)->left; // Sets the rightmost node as its left child NULL if it doesn't have one
+    free(temp); // Frees the memory of the rightmost node
+  }
+
 }
 
 /*
@@ -82,6 +134,26 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
  */
 void bst_delete(bst_node_t **tree, char key)
 {
+  if (*tree == NULL) { // If the tree is empty do nothign
+    return;
+  }
+  if ((*tree)->key == key) { // If the key is at the root of the tree
+    bst_node_t *temp = *tree;
+    if ((*tree)->left == NULL && (*tree)->right == NULL) { // If the node doesn't have any children
+      *tree = NULL;
+    } else if ((*tree)->left == NULL) {  // If the node has only right child replace it with the right child
+      *tree = (*tree)->right;
+    } else if ((*tree)->right == NULL) { // If the node has only left child replace it with the left child
+      *tree = (*tree)->left;
+    } else { //If the node has both children replace it with the rightmost of the left subtree
+      bst_replace_by_rightmost(*tree, &(*tree)->left);
+    }
+    free(temp); // Frees the memory of the node
+  } else if ((*tree)->key > key) { // If the key is smaller go to the left subtree
+    bst_delete(&(*tree)->left, key);
+  } else {
+    bst_delete(&(*tree)->right, key); // If the key is bigger go to the right subtree
+  }
 }
 
 /*
