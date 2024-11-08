@@ -66,6 +66,7 @@ int to_lower(char c) {
 }
 
 void letter_count(bst_node_t **tree, char *input) {
+    bst_init(tree); // Initializes the tree
     while(*input) { // Goes through the input
         char c = *input;
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) { // If the input is a character
